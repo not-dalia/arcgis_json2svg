@@ -1,6 +1,7 @@
 # json2svg
 Converts ArcGIS json map data to SVG.
-**IKPORTANT:** Experimental, highly unstable, made for a very specific use case. Use at your own risk.
+
+**IMPORTANT:** Experimental, highly unstable, made for a very specific use case. Use at your own risk.
 
 ## Usage
 1. Clone
