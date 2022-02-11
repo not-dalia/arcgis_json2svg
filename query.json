@@ -1,0 +1,41 @@
+{
+	"namespaces": [{
+		"prefix": "d",
+		"value": "urn:data"
+	}],
+	"layers": [{
+			"layerattribs": [{
+				"name": "id",
+				"value": ["test"]
+			}],
+			"source": ["All.1", "All.2"],
+			"groupingid": [
+				["distid"]
+			],
+			"attributes": [[{
+				"name": "d:name",
+				"value": ["$distname"]
+			}]]
+		},
+		{
+			"source": ["District"],
+			"groupingid": [
+				["stcode", "dtcode"],
+				["stcode"]
+			],
+			"attributes": [
+				[{
+					"name": "d:name",
+					"value": ["$dtname"]
+				}, {
+					"name": "id",
+					"value": ["id-", "$dtcode"]
+				}],
+				[{
+					"name": "d:name",
+					"value": ["$stname"]
+				}]
+			]
+		}
+	]
+}

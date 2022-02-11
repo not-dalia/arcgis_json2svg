@@ -1,0 +1,11 @@
+{
+  "name": "json2svg",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "minimist": "^1.2.5"
+  }
+}
