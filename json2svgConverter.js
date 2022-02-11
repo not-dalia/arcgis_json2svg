@@ -37,7 +37,7 @@ class JSON2SVGConverter {
       layer.source.forEach(s => {
         if (fileNames.has(s)) return;
         fileNames.add(s);
-        let rawdata = fs.readFileSync(path.join(__dirname, './Maps/' + s + '.json'));
+        let rawdata = fs.readFileSync(s);
         let jsonData = JSON.parse(rawdata);
         jsonData.features.forEach((feature) => {
           feature.attributes._fileName = s;
