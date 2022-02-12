@@ -12,6 +12,8 @@ class JSON2SVGConverter {
       xmlns: "http://www.w3.org/2000/svg"
     };
     this.options = options || {};
+    this.scale = { x: 1, y: 1 };
+    this.decimals = 4;
     this.minMaxDims = {
       x: {
         min: Infinity,
@@ -53,7 +55,7 @@ class JSON2SVGConverter {
     this.calculateViewBox();
     this.generateLayers();
     this.generateGroups();
-
+    this.generateStyle();
 
 
     // this.calculateDisplayDims();
@@ -71,12 +73,20 @@ class JSON2SVGConverter {
 
   getSVGElement() {
     let svg = `<?xml version="1.0" standalone="no"?>
-    <svg xmlns="${this.svg.xmlns}" ${this.getXMLNSAttributes()} viewBox="${this.svg.viewBox}" ${this.svg.width ? 'width="' + this.svg.width + '"' : ''} ${this.svg.height ? 'height="' + this.svg.height + '"' : ''}>`;
-    this.svg.g.forEach(g => {
+<svg xmlns="${this.svg.xmlns}"${this.getXMLNSAttributes()} viewBox="${this.svg.viewBox}"${this.svg.width ? ' width="' + this.svg.width + '"' : ''}${this.svg.height ? ' height="' + this.svg.height + '"' : ''}>\n`;
+    if (this.svg.style)
+        svg += `<style>${this.svg.style}</style>\n`;
+    this.svg.g.forEach(g =>
+    {
       svg += g + '\n';
     })
     svg += `</svg>`;
     return svg;
+    }
+
+  generateStyle() {
+    if (this.options.style)
+      this.svg.style = this.options.style;
   }
 
   generateXMLNSAttributes() {
@@ -130,14 +140,14 @@ class JSON2SVGConverter {
 
       if (layerAttribs) {
         layerAttribs.forEach(la => {
-          layerAttrib += `${la.name}="${la.value.map(v => {
+          layerAttrib += ` ${la.name}="${la.value.map(v => {
             if (v[0] != '$') return v;
-            else return group[0].attributes[v.substr(1)].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/\'/g, '&apos;');
+            else return group[0].attributes[v.substr(1)].replace(/&/g, '&amp;').replace(/\"/g, '&quot;');
           }).join('')}"`
         })
       }
 
-      this.svg.g.push(`<g ${layerAttrib}>${groupPath}</g>`);
+      this.svg.g.push(`<g${layerAttrib}>\n${groupPath}\n</g>\n`);
     })
 
     let remainingFiles = Array.from(this.fileNames);
@@ -146,7 +156,7 @@ class JSON2SVGConverter {
       let features = this.json.features.filter(f => f.attributes._fileName === s);
       features.forEach((feature, fi) => {
         let path = this.getPath(feature);
-        fileGroup += path + '\n';
+        fileGroup += path;
       })
       fileGroup += '</g>';
       this.svg.g.push(fileGroup);
@@ -174,12 +184,12 @@ class JSON2SVGConverter {
       groupAttribs[0].forEach(ga => {
         groupAttrib += ` ${ga.name}="${ga.value.map(v => {
           if (v[0] != '$') return v;
-          else return features[0].attributes[v.substr(1)].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/\'/g, '&apos;');
+          else return features[0].attributes[v.substr(1)].replace(/&/g, '&amp;').replace(/\"/g, '&quot;');
         }).join('')}"`
       })
-      let path = `<g ${groupAttrib}>`;
+      let path = `\n<g${groupAttrib}>`;
       features.forEach(f => {
-        path = path + f._path + '\n';
+        path = path + f._path;
       });
 
       path += `</g>`;
@@ -198,9 +208,9 @@ class JSON2SVGConverter {
       svgBody[ri] = '';
       ring.forEach((point, pi) => {
         if (pi === 0) {
-          svgBody[ri] += `M ${(point[0] - this.minMaxDims.x.min).toFixed(4)} ${(this.minMaxDims.y.max - point[1]).toFixed(4)} `;
+          svgBody[ri] += `M${this.transX(point[0])} ${this.transY(point[1])} `;
         } else {
-          svgBody[ri] += `L ${(point[0] - this.minMaxDims.x.min).toFixed(4)} ${(this.minMaxDims.y.max - point[1]).toFixed(4)} `;
+          svgBody[ri] += `L${this.transX(point[0])} ${this.transY(point[1])} `;
         }
       });
     });
@@ -226,11 +236,11 @@ class JSON2SVGConverter {
     let minMaxDims = {
       x: {
         min: Infinity,
-        max: 0
+        max: -Infinity
       },
       y: {
         min: Infinity,
-        max: 0
+        max: -Infinity
       }
     };
     let features = this.json.features;
@@ -258,9 +268,12 @@ class JSON2SVGConverter {
     this.minMaxDims = minMaxDims;
   }
 
+  transX(x) {return ((x - this.minMaxDims.x.min) * this.options.scale.x).toFixed(this.options.decimals); }
+  transY(y) {return ((this.minMaxDims.y.max - y) * this.options.scale.y).toFixed(this.options.decimals); }
+
   calculateViewBox() {
     this.findMinMaxDims();
-    let viewBox = `${0} ${0} ${(this.minMaxDims.x.max - this.minMaxDims.x.min).toFixed(4)} ${(this.minMaxDims.y.max - this.minMaxDims.y.min).toFixed(4)}`;
+    let viewBox = `${0} ${0} ${this.transX(this.minMaxDims.x.max)} ${this.transY(this.minMaxDims.y.min)}`;
     this.svg.viewBox = viewBox;
   }
 }
